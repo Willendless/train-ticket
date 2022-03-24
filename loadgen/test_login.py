@@ -3,6 +3,7 @@ import random
 import json
 import requests
 import subprocess
+import os
 
 from common import get_ip_map, UserBase, get_random_time
 
@@ -245,6 +246,10 @@ class User(UserBase):
 
 ip_map, port_map = get_ip_map("3a4205d9a390")
 
-user = User('fdse_microservice', '111111', ip_map, port_map)
+os.environ['NO_PROXY'] = ip_map["ui-dashboard"]
+for k in ip_map:
+    os.environ["NO_PROXY"] = os.environ["NO_PROXY"] + "," + ip_map[k]
+
+user = User('fdse_microservice0', '111111', ip_map, port_map)
 user.run()
 # user.test()
