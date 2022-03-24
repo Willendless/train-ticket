@@ -77,9 +77,10 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
 
     private void printMetrics() {
         ConsistencyCheckedCache.LOGGER.info(
-            "[query count] " + queryCount + " "
-          + "[hit count] " + hitCount + " "
-          + "[cold miss] " + coldMiss);
+            "[" + name + "]"
+          + "query count: " + queryCount + " "
+          + "hit count: " + hitCount + " "
+          + "cold miss: " + coldMiss);
     }
 
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
