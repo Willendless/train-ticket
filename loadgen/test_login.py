@@ -229,6 +229,14 @@ class User(UserBase):
         print("MUMMA: ", response, response._content)
         print(self.userId, trip['startingStation'], trip['terminalStation'])
         print("MIA: ", self.getAllOrders())
+        return order_request_data
+    
+    def place_order(self, order_request)
+        response = requests.post(self.get_addr('preserve-service', "/api/v1/preserveservice/preserve"),
+                                 json = order_request, headers=self.auth_headers())
+        print("MUMMA: ", response, response._content)
+        print("MIA: ", self.getAllOrders()):
+        print("ok")
 
     def get_food(self):
         response = requests.get(self.get_addr('food-map-service', "/api/v1/foodmapservice/trainfoods"),
@@ -241,7 +249,11 @@ class User(UserBase):
 
     def run(self):
         self.login()
-        self.place_random_order()
+        order = self.place_random_order()
+        if order != None:
+            for _ in range(50):
+                self.place_order(order)
+        # self.place_random_order()
         # self.get_est_route()
 
 ip_map, port_map = get_ip_map("3a4205d9a390")
