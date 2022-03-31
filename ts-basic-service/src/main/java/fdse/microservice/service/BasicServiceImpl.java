@@ -102,19 +102,19 @@ public class BasicServiceImpl implements BasicService {
     };
 
     private final ConsistencyCheckedCache<String, HttpHeaders, Boolean> stationExistsCache = new ConsistencyCheckedCache<String, HttpHeaders, Boolean>(
-            "stationExistsCache", 100, checkStationExists);
+            "stationExistsCache", 100, false, checkStationExists);
 
     private final ConsistencyCheckedCache<String, HttpHeaders, Response> stationIdCache = new ConsistencyCheckedCache<String, HttpHeaders, Response>(
-            "stationIdCache", 100, stationIdQuery);
+            "stationIdCache", 100, false, stationIdQuery);
 
     private final ConsistencyCheckedCache<String, HttpHeaders, TrainType> trainTypeCache = new ConsistencyCheckedCache<String, HttpHeaders, TrainType>(
-            "trainTypeCache", 100, queryTrainType);
+            "trainTypeCache", 100, false, queryTrainType);
 
     private final ConsistencyCheckedCache<String, HttpHeaders, Route> routeIdCache = new ConsistencyCheckedCache<String, HttpHeaders, Route>(
-            "routeIdCache", 100, getRouteByRouteId);
+            "routeIdCache", 100, false, getRouteByRouteId);
 
     private final ConsistencyCheckedCache<SimpleImmutableEntry<String, String>, HttpHeaders, PriceConfig> priceCache = new ConsistencyCheckedCache<SimpleImmutableEntry<String, String>, HttpHeaders, PriceConfig>(
-            "priceCache", 100, queryPriceConfigByRouteIdAndTrainType);
+            "priceCache", 100, false, queryPriceConfigByRouteIdAndTrainType);
 
     @Override
     public Response queryForTravel(Travel info, HttpHeaders headers) {

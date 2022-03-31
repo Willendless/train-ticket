@@ -109,22 +109,22 @@ public class TravelServiceImpl implements TravelService {
     };
 
     private ConsistencyCheckedCache<String, HttpHeaders, TrainType> trainTypeCache = new ConsistencyCheckedCache<String, HttpHeaders, TrainType>(
-            "trainTypeCache", 100, trainTypeQuery);
+            "trainTypeCache", 100, true, trainTypeQuery);
 
     private ConsistencyCheckedCache<String, HttpHeaders, String> stationIdCache = new ConsistencyCheckedCache<String, HttpHeaders, String>(
-            "stationIdCache", 100, stationIdQuery);
+            "stationIdCache", 100, false, stationIdQuery);
 
     private ConsistencyCheckedCache<String, HttpHeaders, Route> routeCache = new ConsistencyCheckedCache<String, HttpHeaders, Route>(
-            "routeCache", 100, routeQuery);
+            "routeCache", 100, false, routeQuery);
 
     private ConsistencyCheckedCache<Travel, HttpHeaders, TravelResult> travelResultCache = new ConsistencyCheckedCache<Travel, HttpHeaders, TravelResult>(
-            "travelResultCache", 100, travelResultQuery);
+            "travelResultCache", 100, false, travelResultQuery);
 
     private ConsistencyCheckedCache<SimpleImmutableEntry<Trip, Date>, HttpHeaders, Response<SoldTicket>> soldTicketCache = new ConsistencyCheckedCache<SimpleImmutableEntry<Trip, Date>, HttpHeaders, Response<SoldTicket>>(
-            "soldTicketCache", 100, soldTicketQuery);
+            "soldTicketCache", 100, false, soldTicketQuery);
 
     private ConsistencyCheckedCache<Seat, HttpHeaders, Response<Integer>> restTicketCache = new ConsistencyCheckedCache<Seat, HttpHeaders, Response<Integer>>(
-            "restTicketCache", 100, restTicketQuery);
+            "restTicketCache", 100, true, restTicketQuery);
 
     String success = "Success";
     String noContent = "No Content";
@@ -307,8 +307,10 @@ public class TravelServiceImpl implements TravelService {
         query.setEndPlace(endPlaceName);
         query.setDepartureTime(departureTime);
 
+        // we query travelResult for seat price
         TravelResult resultForTravel = travelResultCache.getOrInsert(query, headers);
 
+        // TODO: why do we need this query here?
         // Ticket order _ high-speed train (number of tickets purchased)
         Response<SoldTicket> result = soldTicketCache.getOrInsert(
                 new SimpleImmutableEntry<Trip, Date>(trip, departureTime),

@@ -102,22 +102,22 @@ public class PreserveServiceImpl implements PreserveService {
     };
 
     private final ConsistencyCheckedCache<String, HttpHeaders, Response<Contacts>> contactsCache = new ConsistencyCheckedCache<String, HttpHeaders, Response<Contacts>>(
-            "contactsCache", 100, getContactsById);
+            "contactsCache", 100, true, getContactsById);
 
     private final ConsistencyCheckedCache<TripAllDetailInfo, HttpHeaders, Response<TripAllDetail>> tripDetailCache = new ConsistencyCheckedCache<TripAllDetailInfo, HttpHeaders, Response<TripAllDetail>>(
-            "tripDetailCache", 100, getTripAllDetailInformation);
+            "tripDetailCache", 100, true, getTripAllDetailInformation);
 
     private final ConsistencyCheckedCache<String, HttpHeaders, String> stationIdCache = new ConsistencyCheckedCache<String, HttpHeaders, String>(
-            "stationIdCache", 100, queryForStationId);
+            "stationIdCache", 100, false, queryForStationId);
 
     private final ConsistencyCheckedCache<String, HttpHeaders, Response> securityCache = new ConsistencyCheckedCache<String, HttpHeaders, Response>(
-            "securityCache", 100, checkSecurity);
+            "securityCache", 100, true, checkSecurity);
 
     private final ConsistencyCheckedCache<Travel, HttpHeaders, TravelResult> ticketInfoCache = new ConsistencyCheckedCache<Travel, HttpHeaders, TravelResult>(
-            "ticketInfoCache", 100, getTicketInfo);
+            "ticketInfoCache", 100, false, getTicketInfo);
 
     private final ConsistencyCheckedCache<Seat, HttpHeaders, Ticket> seatRequestCache = new ConsistencyCheckedCache<Seat, HttpHeaders, Ticket>(
-            "seatRequestCache", 100, seatRequestQuery);
+            "seatRequestCache", 100, false, seatRequestQuery);
 
     @Override
     public Response preserve(OrderTicketsInfo oti, HttpHeaders headers) {

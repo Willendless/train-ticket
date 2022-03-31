@@ -44,10 +44,10 @@ public class TicketInfoServiceImpl implements TicketInfoService {
     };
 
     private ConsistencyCheckedCache<Travel, HttpHeaders, Response> travelCache = new ConsistencyCheckedCache<Travel, HttpHeaders, Response>(
-            "travelCache", 100, travelQuery);
+            "travelCache", 100, false, travelQuery);
 
     private ConsistencyCheckedCache<String, HttpHeaders, Response> stationCache = new ConsistencyCheckedCache<String, HttpHeaders, Response>(
-            "stationCache", 100, stationQuery);
+            "stationCache", 100, false, stationQuery);
 
     @Override
     public Response queryForTravel(Travel info, HttpHeaders headers) {

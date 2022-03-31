@@ -10,6 +10,7 @@ import java.util.function.BiFunction;
 public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
 
     private String name;
+    private boolean logging;
     // currently cacheSize is not used
     private int cacheSize;
     private int queryCount;
@@ -20,11 +21,12 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsistencyCheckedCache.class);
 
-    public ConsistencyCheckedCache(String name, int cacheSize, BiFunction<K, T, V> getter) {
+    public ConsistencyCheckedCache(String name, int cacheSize, boolean doLogging, BiFunction<K, T, V> getter) {
         super(16, 0.75f, true);
         this.name = name;
         this.cacheSize = cacheSize;
         this.getter = getter;
+        this.logging = doLogging;
         queryCount = 0;
         hitCount = 0;
         coldMiss = 0;
@@ -39,48 +41,57 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
         if (cached == null) {
             coldMiss += 1;
 
-            ConsistencyCheckedCache.LOGGER.info(
-                    "[" + name + "] inserting entry for key "
-                            + key
-                            + ", value was "
-                            + result);
+            if (logging) {
+                ConsistencyCheckedCache.LOGGER.info(
+                        "[" + name + "] inserting entry for key "
+                                + key
+                                + ", value was "
+                                + result);
+            }
+
             put(key, result);
 
-            printMetrics();
+            printMetricsOnLogging();
 
             return result;
         } else {
             if (cached.equals(result)) {
                 hitCount += 1;
 
-                ConsistencyCheckedCache.LOGGER.info(
-                        "[" + name + "] had a good cached entry for key "
-                                + key
-                                + ", value was "
-                                + cached);
+                if (logging) {
+                    ConsistencyCheckedCache.LOGGER.info(
+                            "[" + name + "] had a good cached entry for key "
+                                    + key
+                                    + ", value was "
+                                    + cached);
+                }
             } else {
-                ConsistencyCheckedCache.LOGGER.info(
-                        "[" + name + "] had an inconsistent cached entry for key "
-                                + key
-                                + ", cached value was "
-                                + cached
-                                + ", actual value was "
-                                + result);
+                if (logging) {
+                    ConsistencyCheckedCache.LOGGER.info(
+                            "[" + name + "] had an inconsistent cached entry for key "
+                                    + key
+                                    + ", cached value was "
+                                    + cached
+                                    + ", actual value was "
+                                    + result);
+                }
                 put(key, result);
             }
 
-            printMetrics();
+            printMetricsOnLogging();
 
             return cached;
         }
     }
 
-    private void printMetrics() {
-        ConsistencyCheckedCache.LOGGER.info(
-            "[" + name + "]"
-          + "query count: " + queryCount + " "
-          + "hit count: " + hitCount + " "
-          + "cold miss: " + coldMiss);
+    private void printMetricsOnLogging() {
+        if (logging) {
+            ConsistencyCheckedCache.LOGGER.info(
+                "[" + name + "]"
+            + "query count: " + queryCount + " "
+            + "hit count: " + hitCount + " "
+            + "cold miss: " + coldMiss);
+        }
     }
 
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {

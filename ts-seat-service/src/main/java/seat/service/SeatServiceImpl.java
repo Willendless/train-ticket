@@ -62,12 +62,12 @@ public class SeatServiceImpl implements SeatService {
     };
 
     private ConsistencyCheckedCache<String, HttpHeaders, Response<Route>> routeResultCache = new ConsistencyCheckedCache<String, HttpHeaders, Response<Route>>(
-            "routeResultCache", 100, routeResultQuery);
+            "routeResultCache", 100, false, routeResultQuery);
 
     private ConsistencyCheckedCache<Seat, HttpHeaders, LeftTicketInfo> leftTicketCache = new ConsistencyCheckedCache<Seat, HttpHeaders, LeftTicketInfo>(
-            "leftTicketCache", 100, leftTicketQuery);
+            "leftTicketCache", 100, true, leftTicketQuery);
     private ConsistencyCheckedCache<Seat, HttpHeaders, TrainType> trainTypeCache = new ConsistencyCheckedCache<Seat, HttpHeaders, TrainType>(
-            "trainTypeCache", 100, trainTypeQuery);
+            "trainTypeCache", 100, true, trainTypeQuery);
 
     @Override
     public Response distributeSeat(Seat seatRequest, HttpHeaders headers) {
