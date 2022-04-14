@@ -174,19 +174,23 @@ class User(UserBase):
             ret_trip['terminalStation'] = trip['terminalStation']
         return ret_trip
 
-    def place_random_order(self):
-        # Get all routes
+    # randomly pick two stations first
+    def random_pick_stations(self):
         routes = self.getAllRoutes()
         route = random.sample(routes, 1)[0]['stations']
         route_ids = random.sample(range(0, len(route)), 2)
         route_ids.sort()
         start, end = route[route_ids[0]], route[route_ids[1]]
+        return start, end
+
+    def place_random_order(self, start, end):
         trip_date_time = get_random_time(100)
 
         trip = self.get_a_trip_between_stations(start, end, trip_date_time)
         if trip == None:
-            print('Returning')
+            print('trip not exists, returning')
             return
+
         tripId = trip['tripId']
         contact_id = random.choice(self.getAllContacts())['id']
 
@@ -231,11 +235,11 @@ class User(UserBase):
         print("MIA: ", self.getAllOrders())
         return order_request_data
     
-    def place_order(self, order_request)
+    def place_order(self, order_request):
         response = requests.post(self.get_addr('preserve-service', "/api/v1/preserveservice/preserve"),
                                  json = order_request, headers=self.auth_headers())
         print("MUMMA: ", response, response._content)
-        print("MIA: ", self.getAllOrders()):
+        print("MIA: ", self.getAllOrders())
         print("ok")
 
     def get_food(self):
@@ -247,14 +251,27 @@ class User(UserBase):
         print("MIA: ", response, response._content)
 
 
-    def run(self):
+    def run(self, start, end, i):
         self.login()
-        order = self.place_random_order()
-        if order != None:
-            for _ in range(50):
-                self.place_order(order)
+        while True:
+            order = self.place_random_order(start, end)
+            if order != None:
+                for _ in range(i):
+                    self.place_order(order)
+                break
         # self.place_random_order()
         # self.get_est_route()
+
+    def run_yield(self, start, end):
+        self.login()
+        while True:
+            order = self.place_random_order(start, end)
+            if order != None:
+                for _ in range(3):
+                    yield
+                    self.place_order(order)
+                break
+    
 
 ip_map, port_map = get_ip_map("3a4205d9a390")
 
@@ -262,6 +279,75 @@ os.environ['NO_PROXY'] = ip_map["ui-dashboard"]
 for k in ip_map:
     os.environ["NO_PROXY"] = os.environ["NO_PROXY"] + "," + ip_map[k]
 
-user = User('fdse_microservice0', '111111', ip_map, port_map)
-user.run()
-# user.test()
+def test_five_consecutive_users_single_request():
+    user0 = User('fdse_microservice0', '111111', ip_map, port_map)
+    start, end = user0.random_pick_stations()
+
+    user0.run(start, end, 1)
+    user1 = User('fdse_microservice1', '111111', ip_map, port_map)
+    user1.run(start, end, 1)
+    user2 = User('fdse_microservice2', '111111', ip_map, port_map)
+    user2.run(start, end, 1)
+    user3 = User('fdse_microservice3', '111111', ip_map, port_map)
+    user3.run(start, end, 1)
+    user4 = User('fdse_microservice4', '111111', ip_map, port_map)
+    user4.run(start, end, 1)
+
+def test_five_consecutive_users():
+    user0 = User('fdse_microservice0', '111111', ip_map, port_map)
+    start, end = user0.random_pick_stations()
+
+    user0.run(start, end, 3)
+    user1 = User('fdse_microservice1', '111111', ip_map, port_map)
+    user1.run(start, end, 3)
+    user2 = User('fdse_microservice2', '111111', ip_map, port_map)
+    user2.run(start, end, 3)
+    user3 = User('fdse_microservice3', '111111', ip_map, port_map)
+    user3.run(start, end, 3)
+    user4 = User('fdse_microservice4', '111111', ip_map, port_map)
+    user4.run(start, end, 3)
+
+def test_five_interleave_users():
+    user0 = User('fdse_microservice0', '111111', ip_map, port_map)
+    start, end = user0.random_pick_stations()
+
+    it0 = user0.run_yield(start, end)
+
+    user1 = User('fdse_microservice1', '111111', ip_map, port_map)
+    it1 = user1.run_yield(start, end)
+
+    user2 = User('fdse_microservice2', '111111', ip_map, port_map)
+    it2 = user2.run_yield(start, end)
+
+    user3 = User('fdse_microservice3', '111111', ip_map, port_map)
+    it3 = user3.run_yield(start, end)
+
+    user4 = User('fdse_microservice4', '111111', ip_map, port_map)
+    it4 = user4.run_yield(start, end)
+
+    next(it0)
+    next(it1)
+    next(it2)
+    next(it3)
+    next(it4)
+    next(it0)
+    next(it1)
+    next(it2)
+    next(it3)
+    next(it4)
+    next(it0)
+    next(it1)
+    next(it2)
+    next(it3)
+    next(it4)
+    next(it0)
+    next(it1)
+    next(it2)
+    next(it3)
+    next(it4)
+
+# test_five_consecutive_users()
+
+# test_five_interleave_users()
+
+test_five_consecutive_users_single_request()
