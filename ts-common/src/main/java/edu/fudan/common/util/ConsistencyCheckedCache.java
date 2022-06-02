@@ -33,64 +33,46 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
     }
 
     public V getOrInsert(K key, T extraArg) {
+        long t0 = System.nanoTime();
         V result = getter.apply(key, extraArg);
+        long t1 = System.nanoTime();
         V cached = get(key);
+        long t2 = System.nanoTime();
+        printLog("time period 1: " + (t1 - t0) + ", time period 2: " + (t2 - t1), false);
 
         queryCount += 1;
 
         if (cached == null) {
             coldMiss += 1;
 
-            if (logging) {
-                ConsistencyCheckedCache.LOGGER.info(
-                        "[" + name + "] inserting entry for key "
-                                + key
-                                + ", value was "
-                                + result);
-            }
-
+            printLog("insert key: " + key + ", value: " + result, false);
             put(key, result);
-
-            printMetricsOnLogging();
+            printLog("", true);
 
             return result;
         } else {
             if (cached.equals(result)) {
                 hitCount += 1;
-
-                if (logging) {
-                    ConsistencyCheckedCache.LOGGER.info(
-                            "[" + name + "] had a good cached entry for key "
-                                    + key
-                                    + ", value was "
-                                    + cached);
-                }
+                printLog("cache hit!!", false);
             } else {
-                if (logging) {
-                    ConsistencyCheckedCache.LOGGER.info(
-                            "[" + name + "] had an inconsistent cached entry for key "
-                                    + key
-                                    + ", cached value was "
-                                    + cached
-                                    + ", actual value was "
-                                    + result);
-                }
+                printLog("cache miss, key: " + key + ", cached value: " + cached + ", actual value: " + result, false);
                 put(key, result);
             }
 
-            printMetricsOnLogging();
-
+            printLog("", true);
             return cached;
         }
     }
 
-    private void printMetricsOnLogging() {
-        if (logging) {
-            ConsistencyCheckedCache.LOGGER.info(
-                "[" + name + "]"
-            + "query count: " + queryCount + " "
+    private void printLog(String s, Boolean logMetrics) {
+        String logString = "[" + name + "] " + s;
+        if (logMetrics) {
+            logString += "query count: " + queryCount + " "
             + "hit count: " + hitCount + " "
-            + "cold miss: " + coldMiss);
+            + "cold miss: " + coldMiss;
+        }
+        if (logging) {
+            ConsistencyCheckedCache.LOGGER.info(logString);
         }
     }
 
