@@ -26,7 +26,7 @@ def get_ip_map(network_id):
     }
     ip_map = {}
     for key, value in data.items():
-        ip_map[value['Name'].replace('train-ticket_ts-', '').replace('_1', '')] = value['IPv4Address'].replace('/16', '')
+        ip_map[value['Name'].replace('train-ticket-ts-', '').replace('-1', '')] = value['IPv4Address'].replace('/16', '')
 
     return ip_map, port_map
 
