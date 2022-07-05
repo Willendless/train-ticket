@@ -429,7 +429,7 @@ public class TravelServiceImpl implements TravelService {
 
         TravelServiceImpl.LOGGER.info("Seat request To String: {}", seatRequest.toString());
 
-        Response<Integer> re;
+        Response<Integer> re = new Response<>();
 
         if (headers.containsKey("invalidation")) {
             restTicketCache.invalidate(seatRequest, headers, true);
