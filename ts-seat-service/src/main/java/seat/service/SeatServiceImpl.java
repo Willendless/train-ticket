@@ -147,10 +147,11 @@ public class SeatServiceImpl implements SeatService {
                     trainTypeResponse.toString());
         }
 
-        Ticket ticket = new Ticket();
-        if (headers.containsKey("invalidation")) {
-            return new Response<>(1, "Finish invalidation for distributeSeat", ticket);
-        }
+        // todo
+        // Ticket ticket = new Ticket();
+        // if (headers.containsKey("invalidation")) {
+        //     return new Response<>(1, "Finish invalidation for distributeSeat", ticket);
+        // }
 
         // Assign seats
         List<String> stationList = routeResult.getData().getStations();
