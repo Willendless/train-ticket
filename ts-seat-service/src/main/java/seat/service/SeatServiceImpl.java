@@ -147,8 +147,9 @@ public class SeatServiceImpl implements SeatService {
                     trainTypeResponse.toString());
         }
 
+        Ticket ticket = new Ticket();
         if (headers.containsKey("invalidation")) {
-            return new Response<>(1, "Finish invalidation for distributeSeat", new Ticket());
+            return new Response<>(1, "Finish invalidation for distributeSeat", ticket);
         }
 
         // Assign seats
@@ -166,7 +167,6 @@ public class SeatServiceImpl implements SeatService {
                     seatTotalNum);
         }
         String startStation = seatRequest.getStartStation();
-        Ticket ticket = new Ticket();
         ticket.setStartStation(startStation);
         ticket.setDestStation(seatRequest.getDestStation());
 
@@ -290,7 +290,7 @@ public class SeatServiceImpl implements SeatService {
         }
 
         if (headers.containsKey("invalidation")) {
-            return new Response<>(1, "Finish invalidation for getLeftTicketOfInterval", 0);
+            return new Response<>(1, "Finish invalidation for getLeftTicketOfInterval", numOfLeftTicket);
         }
 
         // Counting the seats remaining in certain sections
