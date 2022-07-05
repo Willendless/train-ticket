@@ -148,7 +148,7 @@ public class SeatServiceImpl implements SeatService {
         }
 
         // todo
-        // Ticket ticket = new Ticket();
+        Ticket ticket = new Ticket();
         // if (headers.containsKey("invalidation")) {
         //     return new Response<>(1, "Finish invalidation for distributeSeat", ticket);
         // }
