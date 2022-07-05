@@ -73,7 +73,7 @@ public class SeatServiceImpl implements SeatService {
     public Response distributeSeat(Seat seatRequest, HttpHeaders headers) {
         Response<Route> routeResult;
 
-        LeftTicketInfo leftTicketInfo;
+        LeftTicketInfo leftTicketInfo = new LeftTicketInfo();
         TrainType trainTypeResult = null;
         ResponseEntity<Response<Route>> re;
         ResponseEntity<Response<TrainType>> re2;
@@ -149,9 +149,9 @@ public class SeatServiceImpl implements SeatService {
 
         // todo
         Ticket ticket = new Ticket();
-        // if (headers.containsKey("invalidation")) {
-        //     return new Response<>(1, "Finish invalidation for distributeSeat", ticket);
-        // }
+        if (headers.containsKey("invalidation")) {
+            return new Response<>(1, "Finish invalidation for distributeSeat", ticket);
+        }
 
         // Assign seats
         List<String> stationList = routeResult.getData().getStations();
