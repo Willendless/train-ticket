@@ -216,7 +216,7 @@ public class SeatServiceImpl implements SeatService {
         int numOfLeftTicket = 0;
         Response<Route> routeResult;
         TrainType trainTypeResult;
-        LeftTicketInfo leftTicketInfo;
+        LeftTicketInfo leftTicketInfo = new LeftTicketInfo();
 
         ResponseEntity<Response<Route>> re;
         ResponseEntity<Response<TrainType>> re2;
