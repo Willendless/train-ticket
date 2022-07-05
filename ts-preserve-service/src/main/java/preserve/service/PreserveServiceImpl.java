@@ -17,6 +17,7 @@ import preserve.entity.*;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.ArrayList;
 
 /**
  * @author fdse
@@ -236,6 +237,23 @@ public class PreserveServiceImpl implements PreserveService {
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 4] Do Order Complete");
 
         Response returnResponse = new Response<>(1, "Success.", cor.getMsg());
+
+
+        // order creation succeed, recursively invalidate next level caches
+        headers.put("invalidation", new ArrayList<String>());
+        tripDetailCache.invalidate(gtdi, headers, true);
+
+        if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
+            dipatchSeat(oti.getDate(),
+                order.getTrainNumber(), fromStationId, toStationId,
+                SeatClass.FIRSTCLASS.getCode(), headers);
+        } else {
+            dipatchSeat(oti.getDate(),
+                order.getTrainNumber(), fromStationId, toStationId,
+                SeatClass.SECONDCLASS.getCode(), headers);
+        }
+
+
         // 5.Check insurance options
         if (oti.getAssurance() == 0) {
             PreserveServiceImpl.LOGGER.info("[Preserve Service][Step 5] Do not need to buy assurance");
@@ -334,6 +352,11 @@ public class PreserveServiceImpl implements PreserveService {
         seatRequest.setStartStation(startStationId);
         seatRequest.setDestStation(endStataionId);
         seatRequest.setSeatType(seatType);
+
+        if (httpHeaders.containsKey("invalidation")) {
+            seatRequestCache.invalidate(seatRequest, httpHeaders, true);
+            return null;
+        }
 
         return seatRequestCache.getOrInsert(seatRequest, httpHeaders);
     }

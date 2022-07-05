@@ -399,6 +399,10 @@ public class TravelServiceImpl implements TravelService {
     }
 
     private TrainType getTrainType(String trainTypeId, HttpHeaders headers) {
+        if (headers.containsKey("invalidation")) {
+            trainTypeCache.invalidate(trainTypeId, headers, true);
+            return null;
+        }
         return trainTypeCache.getOrInsert(trainTypeId, headers);
     }
 
@@ -425,7 +429,13 @@ public class TravelServiceImpl implements TravelService {
 
         TravelServiceImpl.LOGGER.info("Seat request To String: {}", seatRequest.toString());
 
-        Response<Integer> re = restTicketCache.getOrInsert(seatRequest, headers);
+        Response<Integer> re;
+
+        if (headers.containsKey("invalidation")) {
+            restTicketCache.invalidate(seatRequest, headers, true);
+        } else {
+            re = restTicketCache.getOrInsert(seatRequest, headers);
+        }
         TravelServiceImpl.LOGGER.info("Get Rest tickets num is: {}", re.toString());
 
         return re.getData();

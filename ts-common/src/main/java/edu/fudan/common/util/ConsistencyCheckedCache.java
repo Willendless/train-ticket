@@ -79,4 +79,12 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
         return size() >= cacheSize;
     }
+
+    public void invalidate(K key, T extraArg, boolean forward) {
+        remove(key);
+        if (forward) {
+            getter.apply(key, extraArg);
+        }
+        printLog("!!!!!!!!!!invalidate!!!!!!!!!!", false);
+    }
 }

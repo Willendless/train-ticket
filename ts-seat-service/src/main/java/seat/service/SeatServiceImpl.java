@@ -93,7 +93,11 @@ public class SeatServiceImpl implements SeatService {
 
             // Call the microservice to query for residual Ticket information: the set of
             // the Ticket sold for the specified seat type
-            leftTicketInfo = leftTicketCache.getOrInsert(seatRequest, headers);
+            if (headers.containsKey("invalidation")) {
+                leftTicketCache.invalidate(seatRequest, headers, false);
+            } else {
+                leftTicketInfo = leftTicketCache.getOrInsert(seatRequest, headers);
+            }
             // Calls the microservice to query the total number of seats specified for that
             // vehicle
             trainTypeResult = trainTypeCache.getOrInsert(seatRequest, headers);
@@ -141,6 +145,10 @@ public class SeatServiceImpl implements SeatService {
             trainTypeResult = trainTypeResponse.getData();
             SeatServiceImpl.LOGGER.info("[SeatService distributeSeat 2] The result of getTrainTypeResult is {}",
                     trainTypeResponse.toString());
+        }
+
+        if (headers.containsKey("invalidation")) {
+            return new Response<>(1, "Finish invalidation for distributeSeat", new Ticket());
         }
 
         // Assign seats
@@ -227,7 +235,11 @@ public class SeatServiceImpl implements SeatService {
 
             // Call the micro service to query for residual Ticket information: the set of
             // the Ticket sold for the specified seat type
-            leftTicketInfo = leftTicketCache.getOrInsert(seatRequest, headers);
+            if (headers.containsKey("invalidation")) {
+                leftTicketCache.invalidate(seatRequest, headers, false);
+            } else {
+                leftTicketInfo = leftTicketCache.getOrInsert(seatRequest, headers);
+            }
 
             // Calls the microservice to query the total number of seats specified for that
             // vehicle
@@ -275,6 +287,10 @@ public class SeatServiceImpl implements SeatService {
             trainTypeResult = trainTypeResponse.getData();
             SeatServiceImpl.LOGGER.info("[SeatService getLeftTicketOfInterval] The result of getTrainTypeResult is {}",
                     trainTypeResponse.toString());
+        }
+
+        if (headers.containsKey("invalidation")) {
+            return new Response<>(1, "Finish invalidation for getLeftTicketOfInterval", 0);
         }
 
         // Counting the seats remaining in certain sections
