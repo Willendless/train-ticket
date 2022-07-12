@@ -433,6 +433,7 @@ public class TravelServiceImpl implements TravelService {
 
         if (headers.containsKey("invalidation")) {
             restTicketCache.invalidate(seatRequest, headers, true);
+            return 1;
         } else {
             re = restTicketCache.getOrInsert(seatRequest, headers);
         }
