@@ -240,7 +240,7 @@ public class PreserveServiceImpl implements PreserveService {
 
 
         // order creation succeed, recursively invalidate next level caches
-        headers.put("invalidation", new ArrayList<String>());
+        headers.set("invalidation", "true");
         tripDetailCache.invalidate(gtdi, headers, true);
 
         if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
@@ -354,6 +354,7 @@ public class PreserveServiceImpl implements PreserveService {
         seatRequest.setSeatType(seatType);
 
         if (httpHeaders.containsKey("invalidation")) {
+            PreserveServiceImpl.LOGGER.info("[Preserve Service][dispatchSeat: sending invalidation request]");
             seatRequestCache.invalidate(seatRequest, httpHeaders, true);
             return null;
         }
