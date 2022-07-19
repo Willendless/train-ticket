@@ -462,7 +462,7 @@ public class TravelServiceImpl implements TravelService {
             AdminTrip adminTrip = new AdminTrip();
             adminTrip.setTrip(trip);
             adminTrip.setRoute(getRouteByRouteId(id, trip.getRouteId(), headers));
-            adminTrip.setTrainType(getTrainType(trip.getTrainTypeId(), headers));
+            adminTrip.setTrainType(getTrainType(id, trip.getTrainTypeId(), headers));
             adminTrips.add(adminTrip);
         }
         if (!adminTrips.isEmpty()) {
