@@ -71,6 +71,14 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     public Response distributeSeat(Seat seatRequest, HttpHeaders headers) {
+        String id = headers.get("id").get(0);
+
+        if (headers.containsKey("invalidation")) {
+            leftTicketCache.invalidate(id, seatRequest, headers, false);
+            return new Response<>(1, "Finish invalidation for distributeSeat", new Ticket());
+        }
+
+
         Response<Route> routeResult;
 
         LeftTicketInfo leftTicketInfo = new LeftTicketInfo();
@@ -87,20 +95,17 @@ public class SeatServiceImpl implements SeatService {
 
             // Call the microservice to query all the station information for the train
 
-            routeResult = routeResultCache.getOrInsert(trainNumber, headers);
+            routeResult = routeResultCache.getOrInsert(id, trainNumber, headers);
             SeatServiceImpl.LOGGER.info("[SeatService distributeSeat] The result of getRouteResult is {}",
                     routeResult.getMsg());
 
             // Call the microservice to query for residual Ticket information: the set of
             // the Ticket sold for the specified seat type
-            if (headers.containsKey("invalidation")) {
-                leftTicketCache.invalidate(seatRequest, headers, false);
-            } else {
-                leftTicketInfo = leftTicketCache.getOrInsert(seatRequest, headers);
-            }
+            leftTicketInfo = leftTicketCache.getOrInsert(id, seatRequest, headers);
+
             // Calls the microservice to query the total number of seats specified for that
             // vehicle
-            trainTypeResult = trainTypeCache.getOrInsert(seatRequest, headers);
+            trainTypeResult = trainTypeCache.getOrInsert(id, seatRequest, headers);
 
             SeatServiceImpl.LOGGER.info("[SeatService distributeSeat 1] The result of getTrainTypeResult is {}",
                     trainTypeResult.toString());
@@ -213,6 +218,13 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     public Response getLeftTicketOfInterval(Seat seatRequest, HttpHeaders headers) {
+        String id = headers.get("id").get(0);
+
+        if (headers.containsKey("invalidation")) {
+            leftTicketCache.invalidate(id, seatRequest, headers, false);
+            return new Response<>(1, "Finish invalidation for getLeftTicketOfInterval", 0);
+        }
+
         int numOfLeftTicket = 0;
         Response<Route> routeResult;
         TrainType trainTypeResult;
@@ -230,7 +242,7 @@ public class SeatServiceImpl implements SeatService {
                     trainNumber);
 
             // Call the micro service to query all the station information for the trains
-            routeResult = routeResultCache.getOrInsert(trainNumber, headers);
+            routeResult = routeResultCache.getOrInsert(id, trainNumber, headers);
             SeatServiceImpl.LOGGER.info("[SeatService getLeftTicketOfInterval] The result of getRouteResult is {}",
                     routeResult.getMsg());
 
@@ -239,12 +251,12 @@ public class SeatServiceImpl implements SeatService {
             if (headers.containsKey("invalidation")) {
                 leftTicketCache.invalidate(seatRequest, headers, false);
             } else {
-                leftTicketInfo = leftTicketCache.getOrInsert(seatRequest, headers);
+                leftTicketInfo = leftTicketCache.getOrInsert(id, seatRequest, headers);
             }
 
             // Calls the microservice to query the total number of seats specified for that
             // vehicle
-            trainTypeResult = trainTypeCache.getOrInsert(seatRequest, headers);
+            trainTypeResult = trainTypeCache.getOrInsert(id, seatRequest, headers);
             SeatServiceImpl.LOGGER.info("[SeatService getLeftTicketOfInterval] The result of getTrainTypeResult is {}",
                     trainTypeResult == null ? "null" : trainTypeResult.toString());
         } else {

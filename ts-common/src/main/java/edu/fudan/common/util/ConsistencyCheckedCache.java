@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.HashMap;
 
 public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
 
@@ -18,6 +19,8 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
     private int coldMiss;
     // Key, extra argument, value
     private BiFunction<K, T, V> getter;
+    // request id to cached keys mapping
+    private HashMap<String, K> idTokeys;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsistencyCheckedCache.class);
 
@@ -32,7 +35,7 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
         coldMiss = 0;
     }
 
-    public V getOrInsert(K key, T extraArg) {
+    public V getOrInsert(String id, K key, T extraArg) {
         long t0 = System.nanoTime();
         V result = getter.apply(key, extraArg);
         long t1 = System.nanoTime();
@@ -46,11 +49,15 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
             coldMiss += 1;
 
             printLog("insert key: " + key + ", value: " + result, false);
+
+            idTokeys.put(id, key);
             put(key, result);
+
             printLog("", true);
 
             return result;
         } else {
+
             if (cached.equals(result)) {
                 hitCount += 1;
                 printLog("cache hit!!", false);
@@ -59,6 +66,7 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
                 put(key, result);
             }
 
+            idTokeys.put(id, key);
             printLog("", true);
             return cached;
         }
@@ -80,11 +88,16 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
         return size() >= cacheSize;
     }
 
-    public void invalidate(K key, T extraArg, boolean forward) {
-        remove(key);
+    public void invalidate(String id, K key, T extraArg, boolean forward) {
+        if (idTokeys.get(id) == null) return;
+
+        remove(idTokeys.get(id));
+        idTokeys.remove(id);
+
         if (forward) {
             getter.apply(key, extraArg);
         }
+
         printLog("!!!!!!!!!!invalidate!!!!!!!!!!", false);
     }
 }

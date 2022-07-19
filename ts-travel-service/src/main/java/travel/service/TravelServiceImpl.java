@@ -267,6 +267,16 @@ public class TravelServiceImpl implements TravelService {
 
     @Override
     public Response getTripAllDetailInfo(TripAllDetailInfo gtdi, HttpHeaders headers) {
+        String id = headers.get("id").get(0);
+        TravelServiceImpl.LOGGER.info("[TravelService] [TripAllDetailInfo] invalidation protocol: id: {}", id);
+
+        if (headers.containsKey("invalidation")) {
+            restTicketCache.invalidate(id, new Seat(), headers, true);
+            trainTypeCache.invalidate(id, "G", headers, false);
+            new Response<>(1, success, new TripAllDetail());
+        }
+
+
         TripAllDetail gtdr = new TripAllDetail();
         TravelServiceImpl.LOGGER.info("[TravelService] [TripAllDetailInfo] TripId: {}", gtdi.getTripId());
         Trip trip = repository.findByTripId(new TripId(gtdi.getTripId()));
@@ -280,7 +290,7 @@ public class TravelServiceImpl implements TravelService {
             String endPlaceId = queryForStationId(endPlaceName, headers);
             Route tempRoute = getRouteByRouteId(trip.getRouteId(), headers);
 
-            TripResponse tripResponse = getTickets(trip, tempRoute, startingPlaceId, endPlaceId, gtdi.getFrom(),
+            TripResponse tripResponse = getTickets(id, trip, tempRoute, startingPlaceId, endPlaceId, gtdi.getFrom(),
                     gtdi.getTo(), gtdi.getTravelDate(), headers);
             if (tripResponse == null) {
                 gtdr.setTripResponse(null);
@@ -293,7 +303,7 @@ public class TravelServiceImpl implements TravelService {
         return new Response<>(1, success, gtdr);
     }
 
-    private TripResponse getTickets(Trip trip, Route route, String startingPlaceId, String endPlaceId,
+    private TripResponse getTickets(String id, Trip trip, Route route, String startingPlaceId, String endPlaceId,
             String startingPlaceName, String endPlaceName, Date departureTime, HttpHeaders headers) {
 
         // Determine if the date checked is the same day and after
@@ -308,11 +318,12 @@ public class TravelServiceImpl implements TravelService {
         query.setDepartureTime(departureTime);
 
         // we query travelResult for seat price
-        TravelResult resultForTravel = travelResultCache.getOrInsert(query, headers);
+        TravelResult resultForTravel = travelResultCache.getOrInsert(id, query, headers);
 
         // TODO: why do we need this query here?
         // Ticket order _ high-speed train (number of tickets purchased)
         Response<SoldTicket> result = soldTicketCache.getOrInsert(
+                id,
                 new SimpleImmutableEntry<Trip, Date>(trip, departureTime),
                 headers);
 
@@ -323,10 +334,10 @@ public class TravelServiceImpl implements TravelService {
         response.setConfortClass(50);
         response.setEconomyClass(50);
 
-        int first = getRestTicketNumber(departureTime, trip.getTripId().toString(),
+        int first = getRestTicketNumber(id, departureTime, trip.getTripId().toString(),
                 startingPlaceName, endPlaceName, SeatClass.FIRSTCLASS.getCode(), headers);
 
-        int second = getRestTicketNumber(departureTime, trip.getTripId().toString(),
+        int second = getRestTicketNumber(id, departureTime, trip.getTripId().toString(),
                 startingPlaceName, endPlaceName, SeatClass.SECONDCLASS.getCode(), headers);
         response.setConfortClass(first);
         response.setEconomyClass(second);
@@ -339,7 +350,8 @@ public class TravelServiceImpl implements TravelService {
         int indexEnd = route.getStations().indexOf(endPlaceId);
         int distanceStart = route.getDistances().get(indexStart) - route.getDistances().get(0);
         int distanceEnd = route.getDistances().get(indexEnd) - route.getDistances().get(0);
-        TrainType trainType = getTrainType(trip.getTrainTypeId(), headers);
+
+        TrainType trainType = getTrainType(id, trip.getTrainTypeId(), headers);
         // Train running time is calculated according to the average running speed of
         // the train
         int minutesStart = 60 * distanceStart / trainType.getAverageSpeed();
@@ -398,7 +410,7 @@ public class TravelServiceImpl implements TravelService {
         }
     }
 
-    private TrainType getTrainType(String trainTypeId, HttpHeaders headers) {
+    private TrainType getTrainType(String id, String trainTypeId, HttpHeaders headers) {
         if (headers.containsKey("invalidation")) {
             trainTypeCache.invalidate(trainTypeId, headers, true);
             return null;
@@ -406,20 +418,20 @@ public class TravelServiceImpl implements TravelService {
         return trainTypeCache.getOrInsert(trainTypeId, headers);
     }
 
-    private String queryForStationId(String stationName, HttpHeaders headers) {
-        return stationIdCache.getOrInsert(stationName, headers);
+    private String queryForStationId(String id, String stationName, HttpHeaders headers) {
+        return stationIdCache.getOrInsert(id, stationName, headers);
     }
 
-    private Route getRouteByRouteId(String routeId, HttpHeaders headers) {
-        return routeCache.getOrInsert(routeId, headers);
+    private Route getRouteByRouteId(String id, String routeId, HttpHeaders headers) {
+        return routeCache.getOrInsert(id, routeId, headers);
     }
 
-    private int getRestTicketNumber(Date travelDate, String trainNumber, String startStationName, String endStationName,
+    private int getRestTicketNumber(String id, Date travelDate, String trainNumber, String startStationName, String endStationName,
             int seatType, HttpHeaders headers) {
         Seat seatRequest = new Seat();
 
-        String fromId = queryForStationId(startStationName, headers);
-        String toId = queryForStationId(endStationName, headers);
+        String fromId = queryForStationId(id, startStationName, headers);
+        String toId = queryForStationId(id, endStationName, headers);
 
         seatRequest.setDestStation(toId);
         seatRequest.setStartStation(fromId);
@@ -431,12 +443,7 @@ public class TravelServiceImpl implements TravelService {
 
         Response<Integer> re = new Response<>();
 
-        if (headers.containsKey("invalidation")) {
-            restTicketCache.invalidate(seatRequest, headers, true);
-            return 1;
-        } else {
-            re = restTicketCache.getOrInsert(seatRequest, headers);
-        }
+        re = restTicketCache.getOrInsert(id, seatRequest, headers);
         TravelServiceImpl.LOGGER.info("Get Rest tickets num is: {}", re.toString());
 
         return re.getData();

@@ -30,6 +30,10 @@ public class PreserveServiceImpl implements PreserveService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PreserveServiceImpl.class);
 
+    // an unique id used to identify a single reservation request
+    // it is used in distributed cache protocol to store cache keys
+    private static long counter = 0;
+
     /** Cached Functions */
     private final BiFunction<String, HttpHeaders, Response<Contacts>> getContactsById = (contactsId, httpHeaders) -> {
         PreserveServiceImpl.LOGGER.info("[Preserve Other Service][Get Contacts By Id] Getting....");
@@ -122,10 +126,15 @@ public class PreserveServiceImpl implements PreserveService {
 
     @Override
     public Response preserve(OrderTicketsInfo oti, HttpHeaders headers) {
+
+        // 0.assign id
+        String id = String.valueOf(counter++);
+        PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 0] ID assigned: {}", id);
+
         // 1.detect ticket scalper
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 1] Check Security");
 
-        Response result = securityCache.getOrInsert(oti.getAccountId(), headers);
+        Response result = securityCache.getOrInsert(id, oti.getAccountId(), headers);
         if (result.getStatus() == 0) {
             return new Response<>(0, result.getMsg(), null);
         }
@@ -135,7 +144,7 @@ public class PreserveServiceImpl implements PreserveService {
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 2] Find contacts");
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 2] Contacts Id: {}", oti.getContactsId());
 
-        Response<Contacts> gcr = contactsCache.getOrInsert(oti.getContactsId(), headers);
+        Response<Contacts> gcr = contactsCache.getOrInsert(id, oti.getContactsId(), headers);
         if (gcr.getStatus() == 0) {
             PreserveServiceImpl.LOGGER.info("[Preserve Service][Get Contacts] Fail. {}", gcr.getMsg());
             return new Response<>(0, gcr.getMsg(), null);
@@ -151,7 +160,7 @@ public class PreserveServiceImpl implements PreserveService {
         gtdi.setTravelDate(oti.getDate());
         gtdi.setTripId(oti.getTripId());
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 3] TripId: {}", oti.getTripId());
-        Response<TripAllDetail> response = tripDetailCache.getOrInsert(gtdi, headers);
+        Response<TripAllDetail> response = tripDetailCache.getOrInsert(id, gtdi, headers);
         TripAllDetail gtdr = response.getData();
         LOGGER.info("TripAllDetail:" + gtdr.toString());
         if (response.getStatus() == 0) {
@@ -185,8 +194,8 @@ public class PreserveServiceImpl implements PreserveService {
         order.setTrainNumber(oti.getTripId());
         order.setAccountId(UUID.fromString(oti.getAccountId()));
 
-        String fromStationId = stationIdCache.getOrInsert(oti.getFrom(), headers);
-        String toStationId = stationIdCache.getOrInsert(oti.getTo(), headers);
+        String fromStationId = stationIdCache.getOrInsert(id, oti.getFrom(), headers);
+        String toStationId = stationIdCache.getOrInsert(id, oti.getTo(), headers);
 
         order.setFrom(fromStationId);
         order.setTo(toStationId);
@@ -202,7 +211,7 @@ public class PreserveServiceImpl implements PreserveService {
         query.setEndPlace(oti.getTo());
         query.setDepartureTime(new Date());
 
-        TravelResult resultForTravel = ticketInfoCache.getOrInsert(query, headers);
+        TravelResult resultForTravel = ticketInfoCache.getOrInsert(id, query, headers);
 
         order.setSeatClass(oti.getSeatType());
         PreserveServiceImpl.LOGGER.info("[Preserve Service][Order] Order Travel Date: {}", oti.getDate().toString());
@@ -211,7 +220,7 @@ public class PreserveServiceImpl implements PreserveService {
 
         // Dispatch the seat
         if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
-            Ticket ticket = dipatchSeat(oti.getDate(),
+            Ticket ticket = dipatchSeat(id, oti.getDate(),
                     order.getTrainNumber(), fromStationId, toStationId,
                     SeatClass.FIRSTCLASS.getCode(), headers);
             order.setSeatNumber("" + ticket.getSeatNo());
@@ -241,14 +250,16 @@ public class PreserveServiceImpl implements PreserveService {
 
         // order creation succeed, recursively invalidate next level caches
         headers.set("invalidation", "true");
-        tripDetailCache.invalidate(gtdi, headers, true);
+        headers.set("id", String.valueOf(id));
+
+        tripDetailCache.invalidate(id, gtdi, headers, true);
 
         if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
-            dipatchSeat(oti.getDate(),
+            dipatchSeat(id, oti.getDate(),
                 order.getTrainNumber(), fromStationId, toStationId,
                 SeatClass.FIRSTCLASS.getCode(), headers);
         } else {
-            dipatchSeat(oti.getDate(),
+            dipatchSeat(id, oti.getDate(),
                 order.getTrainNumber(), fromStationId, toStationId,
                 SeatClass.SECONDCLASS.getCode(), headers);
         }
@@ -344,7 +355,7 @@ public class PreserveServiceImpl implements PreserveService {
         return returnResponse;
     }
 
-    public Ticket dipatchSeat(Date date, String tripId, String startStationId, String endStataionId, int seatType,
+    public Ticket dipatchSeat(String id, Date date, String tripId, String startStationId, String endStataionId, int seatType,
             HttpHeaders httpHeaders) {
         Seat seatRequest = new Seat();
         seatRequest.setTravelDate(date);
@@ -355,11 +366,11 @@ public class PreserveServiceImpl implements PreserveService {
 
         if (httpHeaders.containsKey("invalidation")) {
             PreserveServiceImpl.LOGGER.info("[Preserve Service][dispatchSeat: sending invalidation request]");
-            seatRequestCache.invalidate(seatRequest, httpHeaders, true);
+            seatRequestCache.invalidate(id, seatRequest, httpHeaders, true);
             return null;
         }
 
-        return seatRequestCache.getOrInsert(seatRequest, httpHeaders);
+        return seatRequestCache.getOrInsert(id, seatRequest, httpHeaders);
     }
 
     public boolean sendEmail(NotifyInfo notifyInfo, HttpHeaders httpHeaders) {
