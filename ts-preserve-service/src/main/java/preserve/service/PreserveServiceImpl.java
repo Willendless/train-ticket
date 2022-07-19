@@ -129,6 +129,8 @@ public class PreserveServiceImpl implements PreserveService {
 
         // 0.assign id
         String id = String.valueOf(counter++);
+        headers.set("id", String.valueOf(id));
+
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 0] ID assigned: {}", id);
 
         // 1.detect ticket scalper
@@ -250,8 +252,6 @@ public class PreserveServiceImpl implements PreserveService {
 
         // order creation succeed, recursively invalidate next level caches
         headers.set("invalidation", "true");
-        headers.set("id", String.valueOf(id));
-
         tripDetailCache.invalidate(id, gtdi, headers, true);
 
         if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
