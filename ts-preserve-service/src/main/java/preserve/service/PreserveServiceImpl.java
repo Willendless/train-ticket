@@ -227,7 +227,7 @@ public class PreserveServiceImpl implements PreserveService {
             order.setSeatClass(SeatClass.FIRSTCLASS.getCode());
             order.setPrice(resultForTravel.getPrices().get("confortClass"));
         } else {
-            Ticket ticket = dipatchSeat(oti.getDate(),
+            Ticket ticket = dipatchSeat(id, oti.getDate(),
                     order.getTrainNumber(), fromStationId, toStationId,
                     SeatClass.SECONDCLASS.getCode(), headers);
             order.setSeatClass(SeatClass.SECONDCLASS.getCode());
