@@ -455,12 +455,13 @@ public class TravelServiceImpl implements TravelService {
 
     @Override
     public Response adminQueryAll(HttpHeaders headers) {
+        String id = headers.get("id").get(0);
         List<Trip> trips = repository.findAll();
         ArrayList<AdminTrip> adminTrips = new ArrayList<>();
         for (Trip trip : trips) {
             AdminTrip adminTrip = new AdminTrip();
             adminTrip.setTrip(trip);
-            adminTrip.setRoute(getRouteByRouteId(trip.getRouteId(), headers));
+            adminTrip.setRoute(getRouteByRouteId(id, trip.getRouteId(), headers));
             adminTrip.setTrainType(getTrainType(trip.getTrainTypeId(), headers));
             adminTrips.add(adminTrip);
         }
