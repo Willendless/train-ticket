@@ -249,7 +249,7 @@ public class SeatServiceImpl implements SeatService {
             // Call the micro service to query for residual Ticket information: the set of
             // the Ticket sold for the specified seat type
             if (headers.containsKey("invalidation")) {
-                leftTicketCache.invalidate(seatRequest, headers, false);
+                leftTicketCache.invalidate(id, seatRequest, headers, false);
             } else {
                 leftTicketInfo = leftTicketCache.getOrInsert(id, seatRequest, headers);
             }
