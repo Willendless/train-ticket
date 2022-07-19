@@ -292,7 +292,7 @@ public class TravelServiceImpl implements TravelService {
             String endPlaceName = gtdi.getTo();
             String startingPlaceId = queryForStationId(id, startingPlaceName, headers);
             String endPlaceId = queryForStationId(id, endPlaceName, headers);
-            Route tempRoute = getRouteByRouteId(trip.getRouteId(), headers);
+            Route tempRoute = getRouteByRouteId(id, trip.getRouteId(), headers);
 
             TripResponse tripResponse = getTickets(id, trip, tempRoute, startingPlaceId, endPlaceId, gtdi.getFrom(),
                     gtdi.getTo(), gtdi.getTravelDate(), headers);
@@ -416,10 +416,10 @@ public class TravelServiceImpl implements TravelService {
 
     private TrainType getTrainType(String id, String trainTypeId, HttpHeaders headers) {
         if (headers.containsKey("invalidation")) {
-            trainTypeCache.invalidate(trainTypeId, headers, true);
+            trainTypeCache.invalidate(id, trainTypeId, headers, true);
             return null;
         }
-        return trainTypeCache.getOrInsert(trainTypeId, headers);
+        return trainTypeCache.getOrInsert(id, trainTypeId, headers);
     }
 
     private String queryForStationId(String id, String stationName, HttpHeaders headers) {
