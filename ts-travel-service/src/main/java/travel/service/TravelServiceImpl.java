@@ -276,7 +276,11 @@ public class TravelServiceImpl implements TravelService {
 
     @Override
     public Response getTripAllDetailInfo(TripAllDetailInfo gtdi, HttpHeaders headers) {
-        String id = headers.get("id").get(0);
+        String id = "0";
+        if (headers.containsKey("id")) {
+            id = headers.get("id").get(0);
+        }
+
         TravelServiceImpl.LOGGER.info("[TravelService] [TripAllDetailInfo] invalidation protocol: id: {}", id);
 
         if (headers.containsKey("invalidation")) {
