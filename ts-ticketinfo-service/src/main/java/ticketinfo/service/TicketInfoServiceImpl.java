@@ -51,11 +51,13 @@ public class TicketInfoServiceImpl implements TicketInfoService {
 
     @Override
     public Response queryForTravel(Travel info, HttpHeaders headers) {
-        return travelCache.getOrInsert(info, headers);
+        String id = headers.get("id").get(0);
+        return travelCache.getOrInsert(id, info, headers);
     }
 
     @Override
     public Response queryForStationId(String name, HttpHeaders headers) {
-        return stationCache.getOrInsert(name, headers);
+        String id = headers.get("id").get(0);
+        return stationCache.getOrInsert(id, name, headers);
     }
 }
