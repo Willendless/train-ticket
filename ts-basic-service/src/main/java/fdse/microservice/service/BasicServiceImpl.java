@@ -118,21 +118,25 @@ public class BasicServiceImpl implements BasicService {
 
     @Override
     public Response queryForTravel(Travel info, HttpHeaders headers) {
+        String id = "0";
+        if (headers.containsKey("id")) {
+            id = headers.get("id").get(0);
+        }
 
         Response response = new Response<>();
         TravelResult result = new TravelResult();
         result.setStatus(true);
         response.setStatus(1);
         response.setMsg("Success");
-        boolean startingPlaceExist = stationExistsCache.getOrInsert(info.getStartingPlace(), headers);
-        boolean endPlaceExist = stationExistsCache.getOrInsert(info.getEndPlace(), headers);
+        boolean startingPlaceExist = stationExistsCache.getOrInsert(id, info.getStartingPlace(), headers);
+        boolean endPlaceExist = stationExistsCache.getOrInsert(id, info.getEndPlace(), headers);
         if (!startingPlaceExist || !endPlaceExist) {
             result.setStatus(false);
             response.setStatus(0);
             response.setMsg("Start place or end place not exist!");
         }
 
-        TrainType trainType = trainTypeCache.getOrInsert(info.getTrip().getTrainTypeId(), headers);
+        TrainType trainType = trainTypeCache.getOrInsert(id, info.getTrip().getTrainTypeId(), headers);
         if (trainType == null) {
             BasicServiceImpl.LOGGER.info("traintype doesn't exist");
             result.setStatus(false);
@@ -147,9 +151,9 @@ public class BasicServiceImpl implements BasicService {
         if (trainType != null) {
             trainTypeString = trainType.getId();
         }
-        Route route = routeIdCache.getOrInsert(routeId, headers);
+        Route route = routeIdCache.getOrInsert(id, routeId, headers);
         PriceConfig priceConfig = priceCache
-                .getOrInsert(new SimpleImmutableEntry<String, String>(routeId, trainTypeString), headers);
+                .getOrInsert(id, new SimpleImmutableEntry<String, String>(routeId, trainTypeString), headers);
 
         String startingPlaceId = (String) queryForStationId(info.getStartingPlace(), headers).getData();
         String endPlaceId = (String) queryForStationId(info.getEndPlace(), headers).getData();
@@ -193,7 +197,11 @@ public class BasicServiceImpl implements BasicService {
 
     @Override
     public Response queryForStationId(String stationName, HttpHeaders headers) {
-        return stationIdCache.getOrInsert(stationName, headers);
+        String id = "0";
+        if (headers.containsKey("id")) {
+            id = headers.get("id").get(0);
+        }
+        return stationIdCache.getOrInsert(id, stationName, headers);
     }
 
 }
