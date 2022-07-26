@@ -233,7 +233,12 @@ public class TravelServiceImpl implements TravelService {
     @Override
     public Response query(TripInfo info, HttpHeaders headers) {
 
-        String id = headers.get("id").get(0);
+        String id = "0";
+
+        if (headers.containsKey("id")) {
+            id = headers.get("id").get(0);
+            TravelServiceImpl.LOGGER.info("[TravelService] [TripAllDetailInfo] invalidation protocol: id: {}", id);
+        }
 
         // Gets the start and arrival stations of the train number to query. The
         // originating and arriving stations received here are both station names, so
