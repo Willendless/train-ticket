@@ -145,7 +145,7 @@ public class TravelServiceImpl implements TravelService {
 
     @Override
     public Response getRouteByTripId(String tripId, HttpHeaders headers) {
-        String id = headers.get("id").get(0);
+        String id = "0";
         Route route = null;
         if (null != tripId && tripId.length() >= 2) {
             TripId tripId1 = new TripId(tripId);
@@ -163,7 +163,12 @@ public class TravelServiceImpl implements TravelService {
 
     @Override
     public Response getTrainTypeByTripId(String tripId, HttpHeaders headers) {
-        String id = headers.get("id").get(0);
+        String id = "0";
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
+            LOGGER.info("invalidation protocol : " + id);
+        }
+
         TripId tripId1 = new TripId(tripId);
         TrainType trainType = null;
         Trip trip = repository.findByTripId(tripId1);
@@ -235,8 +240,8 @@ public class TravelServiceImpl implements TravelService {
 
         String id = "0";
 
-        if (headers.containsKey("id")) {
-            id = headers.get("id").get(0);
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
             TravelServiceImpl.LOGGER.info("[TravelService] [TripAllDetailInfo] invalidation protocol: id: {}", id);
         }
 
@@ -277,8 +282,8 @@ public class TravelServiceImpl implements TravelService {
     @Override
     public Response getTripAllDetailInfo(TripAllDetailInfo gtdi, HttpHeaders headers) {
         String id = "0";
-        if (headers.containsKey("id")) {
-            id = headers.get("id").get(0);
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
         }
 
         TravelServiceImpl.LOGGER.info("[TravelService] [TripAllDetailInfo] invalidation protocol: id: {}", id);
@@ -365,6 +370,10 @@ public class TravelServiceImpl implements TravelService {
         int distanceEnd = route.getDistances().get(indexEnd) - route.getDistances().get(0);
 
         TrainType trainType = getTrainType(id, trip.getTrainTypeId(), headers);
+        // this might be a invalidation message
+        if (trainType == null)
+            return null;
+
         // Train running time is calculated according to the average running speed of
         // the train
         int minutesStart = 60 * distanceStart / trainType.getAverageSpeed();
@@ -464,7 +473,12 @@ public class TravelServiceImpl implements TravelService {
 
     @Override
     public Response adminQueryAll(HttpHeaders headers) {
-        String id = headers.get("id").get(0);
+        String id = "0";
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
+            LOGGER.info("invalidation protocol : " + id);
+        }
+
         List<Trip> trips = repository.findAll();
         ArrayList<AdminTrip> adminTrips = new ArrayList<>();
         for (Trip trip : trips) {

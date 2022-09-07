@@ -129,9 +129,9 @@ public class PreserveServiceImpl implements PreserveService {
 
         // 0.assign id
         String id = String.valueOf(counter++);
-        headers.set("id", String.valueOf(id));
+        headers.set("invalidation_id", String.valueOf(id));
 
-        PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 0] ID assigned: {}", id);
+        PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 0] Invalidation ID assigned: {}", id);
 
         // 1.detect ticket scalper
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 1] Check Security");
@@ -162,8 +162,12 @@ public class PreserveServiceImpl implements PreserveService {
         gtdi.setTravelDate(oti.getDate());
         gtdi.setTripId(oti.getTripId());
         PreserveServiceImpl.LOGGER.info("[Preserve Service] [Step 3] TripId: {}", oti.getTripId());
+
         Response<TripAllDetail> response = tripDetailCache.getOrInsert(id, gtdi, headers);
         TripAllDetail gtdr = response.getData();
+        if (gtdr == null)
+            return new Response<>(1, "Get TripAllDetail failed.", "");
+
         LOGGER.info("TripAllDetail:" + gtdr.toString());
         if (response.getStatus() == 0) {
             PreserveServiceImpl.LOGGER.info("[Preserve Service][Search For Trip Detail Information] {}",
@@ -171,7 +175,11 @@ public class PreserveServiceImpl implements PreserveService {
             return new Response<>(0, response.getMsg(), null);
         } else {
             TripResponse tripResponse = gtdr.getTripResponse();
+            if (tripResponse == null)
+                return new Response<>(1, "Get TripResponse from triAllDetail failed.", "");
+
             LOGGER.info("TripResponse:" + tripResponse.toString());
+
             if (oti.getSeatType() == SeatClass.FIRSTCLASS.getCode()) {
                 if (tripResponse.getConfortClass() == 0) {
                     PreserveServiceImpl.LOGGER.info("[Preserve Service][Check seat is enough] ");

@@ -119,8 +119,8 @@ public class BasicServiceImpl implements BasicService {
     @Override
     public Response queryForTravel(Travel info, HttpHeaders headers) {
         String id = "0";
-        if (headers.containsKey("id")) {
-            id = headers.get("id").get(0);
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
         }
 
         Response response = new Response<>();
@@ -198,9 +198,11 @@ public class BasicServiceImpl implements BasicService {
     @Override
     public Response queryForStationId(String stationName, HttpHeaders headers) {
         String id = "0";
-        if (headers.containsKey("id")) {
-            id = headers.get("id").get(0);
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
+            LOGGER.info("invalidation protocol : " + id);
         }
+        LOGGER.info("basicServiceImpl: invalidation protocol - id: " + id + ", stationName: " + stationName);
         return stationIdCache.getOrInsert(id, stationName, headers);
     }
 

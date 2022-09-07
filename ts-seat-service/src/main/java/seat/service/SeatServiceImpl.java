@@ -71,7 +71,11 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     public Response distributeSeat(Seat seatRequest, HttpHeaders headers) {
-        String id = headers.get("id").get(0);
+        String id = "0";
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
+            LOGGER.info("invalidation protocol : " + id);
+        }
 
         if (headers.containsKey("invalidation")) {
             leftTicketCache.invalidate(id, seatRequest, headers, false);
@@ -218,7 +222,7 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     public Response getLeftTicketOfInterval(Seat seatRequest, HttpHeaders headers) {
-        String id = headers.get("id").get(0);
+        String id = "0";
 
         if (headers.containsKey("invalidation")) {
             leftTicketCache.invalidate(id, seatRequest, headers, false);

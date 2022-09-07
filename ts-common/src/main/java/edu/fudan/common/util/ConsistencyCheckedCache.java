@@ -17,10 +17,12 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
     private int queryCount;
     private int hitCount;
     private int coldMiss;
+    private int invalidateCount;
+    private int invalidateRedundant;
     // Key, extra argument, value
     private BiFunction<K, T, V> getter;
     // request id to cached keys mapping
-    private HashMap<String, K> idTokeys;
+    private HashMap<String, K> idTokeys = new HashMap<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsistencyCheckedCache.class);
 
@@ -32,6 +34,8 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
         this.logging = doLogging;
         queryCount = 0;
         hitCount = 0;
+        invalidateCount = 0;
+        invalidateRedundant = 0;
         coldMiss = 0;
     }
 
@@ -77,7 +81,9 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
         if (logMetrics) {
             logString += "query count: " + queryCount + " "
             + "hit count: " + hitCount + " "
-            + "cold miss: " + coldMiss;
+            + "cold miss: " + coldMiss + " "
+            + "invalidate count: " + invalidateCount + " "
+            + "redundant invalidation count: " + invalidateRedundant;
         }
         if (logging) {
             ConsistencyCheckedCache.LOGGER.info(logString);
@@ -89,7 +95,14 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
     }
 
     public void invalidate(String id, K key, T extraArg, boolean forward) {
-        if (idTokeys.get(id) == null) return;
+        invalidateCount += 1;
+
+        if (idTokeys.get(id) == null) {
+            invalidateRedundant += 1;
+            return;
+        }
+
+        printLog("!!invalidate!! " + idTokeys.get(id), true);
 
         remove(idTokeys.get(id));
         idTokeys.remove(id);
@@ -97,7 +110,5 @@ public class ConsistencyCheckedCache<K, T, V> extends LinkedHashMap<K, V> {
         if (forward) {
             getter.apply(key, extraArg);
         }
-
-        printLog("!!!!!!!!!!invalidate!!!!!!!!!!", false);
     }
 }

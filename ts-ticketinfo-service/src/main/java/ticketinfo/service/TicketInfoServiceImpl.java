@@ -52,8 +52,8 @@ public class TicketInfoServiceImpl implements TicketInfoService {
     @Override
     public Response queryForTravel(Travel info, HttpHeaders headers) {
         String id = "0";
-        if (headers.containsKey("id")) {
-            id = headers.get("id").get(0);
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
         }
         return travelCache.getOrInsert(id, info, headers);
     }
@@ -61,8 +61,8 @@ public class TicketInfoServiceImpl implements TicketInfoService {
     @Override
     public Response queryForStationId(String name, HttpHeaders headers) {
         String id = "0";
-        if (headers.containsKey("id")) {
-            id = headers.get("id").get(0);
+        if (headers.containsKey("invalidation_id")) {
+            id = headers.getFirst("invalidation_id");
         }
         return stationCache.getOrInsert(id, name, headers);
     }

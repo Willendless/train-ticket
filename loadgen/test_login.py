@@ -273,24 +273,25 @@ class User(UserBase):
                 break
     
 
-ip_map, port_map = get_ip_map("3a4205d9a390")
+ip_map, port_map = get_ip_map("f7f6f0087783")
 
 os.environ['NO_PROXY'] = ip_map["ui-dashboard"]
 for k in ip_map:
     os.environ["NO_PROXY"] = os.environ["NO_PROXY"] + "," + ip_map[k]
 
 def test_five_consecutive_users_single_request():
-    user0 = User('fdse_microservice0', '111111', ip_map, port_map)
+    user0 = User('fdse_microservice5', '111111', ip_map, port_map)
+    user0.login()
     start, end = user0.random_pick_stations()
 
     user0.run(start, end, 1)
-    user1 = User('fdse_microservice1', '111111', ip_map, port_map)
+    user1 = User('fdse_microservice6', '111111', ip_map, port_map)
     user1.run(start, end, 1)
-    user2 = User('fdse_microservice2', '111111', ip_map, port_map)
+    user2 = User('fdse_microservice7', '111111', ip_map, port_map)
     user2.run(start, end, 1)
-    user3 = User('fdse_microservice3', '111111', ip_map, port_map)
+    user3 = User('fdse_microservice8', '111111', ip_map, port_map)
     user3.run(start, end, 1)
-    user4 = User('fdse_microservice4', '111111', ip_map, port_map)
+    user4 = User('fdse_microservice9', '111111', ip_map, port_map)
     user4.run(start, end, 1)
 
 def test_five_consecutive_users():
@@ -308,7 +309,7 @@ def test_five_consecutive_users():
     user4.run(start, end, 3)
 
 def test_five_interleave_users():
-    user0 = User('fdse_microservice0', '111111', ip_map, port_map)
+    user0 = User('fdse_microservice5', '111111', ip_map, port_map)
     start, end = user0.random_pick_stations()
 
     it0 = user0.run_yield(start, end)
